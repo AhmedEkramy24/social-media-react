@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "./../node_modules/@tanstack/react-query-devtools/src/production";
 import ChangePass from "./Components/ChangePass/ChangePass";
 import ChangePhoto from "./Components/ChangePhoto/ChangePhoto";
+import ProfileContextProvider from "./Context/ProfileContext";
 
 const query = new QueryClient();
 
@@ -89,9 +90,11 @@ function App() {
     <>
       <QueryClientProvider client={query}>
         <UserContextProvider>
-          <RouterProvider router={router}></RouterProvider>
-          <Toaster />
-          <ReactQueryDevtools initialIsOpen={true} />
+          <ProfileContextProvider>
+            <RouterProvider router={router}></RouterProvider>
+            <Toaster />
+            <ReactQueryDevtools initialIsOpen={true} />
+          </ProfileContextProvider>
         </UserContextProvider>
       </QueryClientProvider>
     </>

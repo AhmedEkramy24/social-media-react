@@ -5,6 +5,8 @@ import Swal from "sweetalert2";
 import toast from "react-hot-toast";
 import { useUserContext } from "../../Hooks/useUserContext";
 import axios from "axios";
+import { useProfileContext } from "../../Hooks/useProfileContext";
+import { jwtDecode } from "jwt-decode";
 
 interface AddPost {
   body: string;
@@ -23,7 +25,10 @@ export default function AddPost() {
   });
 
   const { token } = useUserContext();
+  const safeToken = token || "";
+  const { user }: { user: string } = jwtDecode(safeToken);
   const [apiError, setApiError] = useState<string>("");
+  const { getUserPosts } = useProfileContext();
 
   async function addPost(values: AddPost) {
     setIsSubmit(true);
@@ -54,6 +59,7 @@ export default function AddPost() {
       toast.success(data.message || "success");
       setApiError("");
       formik.resetForm({ values: { body: "", image: null } });
+      getUserPosts(user);
       setChosenImage(null);
       if (imageInputRef.current) {
         imageInputRef.current.value = "";
@@ -156,20 +162,12 @@ export default function AddPost() {
                 <p>{formik.values.body}</p>
               </div>
 
-              <div className="post-image h-72 lg:h-96">
-                {chosenImage ? (
-                  <img
-                    src={chosenImage}
-                    className="w-full h-full object-cover object-top"
-                    alt="chosen image"
-                  />
-                ) : (
-                  <img
-                    src={postImgae}
-                    className="w-full h-full object-cover object-center opacity-50"
-                    alt="gallery image"
-                  />
-                )}
+              <div className="post-image">
+                <img
+                  src={chosenImage ? chosenImage : postImgae}
+                  className="w-full h-full object-cover object-top"
+                  alt="chosen image"
+                />
               </div>
             </div>
 

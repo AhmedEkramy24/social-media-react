@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
@@ -6,6 +6,7 @@ import type { Comment } from "../../interfaces";
 import { Link } from "react-router-dom";
 import { useUserContext } from "../../Hooks/useUserContext";
 import axios from "axios";
+import { useProfileContext } from "../../Hooks/useProfileContext";
 
 function displayDate(date: string) {
   const now = new Date();
@@ -51,9 +52,27 @@ export default function PostDetails({
 }: PostData) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(showAllComments);
   const [comments, setComments] = useState<Comment[]>(allComments || []);
-  const [isSubmit, setisSubmit] = useState(false);
+  const [isSubmit, setisSubmit] = useState<boolean>(false);
+  const [openThreeDots, setOpenThreeDots] = useState<boolean>(false);
   const { token } = useUserContext();
+  const { deletePost } = useProfileContext();
+  const threeDotsRef: any = useRef(null);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!openThreeDots) return;
+      if (
+        threeDotsRef.current &&
+        !threeDotsRef.current.contains(e.target as Node)
+      ) {
+        setOpenThreeDots(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openThreeDots]);
   useEffect(() => {
     if (allComments) {
       setComments(allComments);
@@ -98,7 +117,7 @@ export default function PostDetails({
 
   return (
     <div className="md:w-1/2 w-full mx-auto shadow rounded-md bg-white mb-5 overflow-hidden">
-      <div className="info flex justify-between p-3 items-center ">
+      <div className="info flex justify-between p-3 items-center relative">
         <div className="flex space-x-3">
           <div className="img size-12 overflow-hidden bg-blue-200 rounded-full">
             <img src={photo} className="w-full h-full object-cover" alt="" />
@@ -110,9 +129,39 @@ export default function PostDetails({
             </p>
           </div>
         </div>
-        <span className="me-2 text-blue-500 text-lg cursor-pointer">
+        <span
+          onClick={() => setOpenThreeDots(true)}
+          className="me-2 text-blue-500 text-lg cursor-pointer"
+        >
           <i className="fas fa-ellipsis-vertical "></i>
         </span>
+        <div
+          ref={threeDotsRef}
+          className={`absolute ${
+            openThreeDots ? "block" : "hidden"
+          } w-fit bg-white zk overflow-hidden rounded-md shadow-lg right-2 top-12 z-10 border border-slate-200`}
+        >
+          <ul>
+            <li
+              onClick={() => {
+                deletePost(postId);
+                setOpenThreeDots(false);
+              }}
+              className="text-red-500 font-bold cursor-pointer border-b border-slate-200 p-2 hover:bg-slate-300"
+            >
+              <i className="fas fa-trash-can"></i> Delete Post
+            </li>
+            <li
+              onClick={() => {
+                setOpenThreeDots(false);
+                toast.error("This feature is not implemented yet.");
+              }}
+              className="text-blue-500 font-bold cursor-pointer p-2 hover:bg-slate-300"
+            >
+              <i className="fa-solid fa-pen-to-square"></i> Update Post
+            </li>
+          </ul>
+        </div>
       </div>
       <div className="title p-2 border-b border-slate-200">
         <p>{content}</p>
@@ -120,7 +169,11 @@ export default function PostDetails({
 
       {image && (
         <div className="post-image ">
-          <img src={image} className="w-full h-full object-cover" alt="" />
+          <img
+            src={image}
+            className="w-full h-full object-cover"
+            alt={content}
+          />
         </div>
       )}
       <div className="reacts border-b border-slate-200 py-8 flex justify-around text-blue-500">
