@@ -51,6 +51,7 @@ export default function Home() {
                   userName={post.user.name}
                   postId={post._id}
                   allComments={post.comments}
+                  userId={post.user._id}
                 />
               );
             })}

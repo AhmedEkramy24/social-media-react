@@ -8,6 +8,8 @@ import { useUserContext } from "../../Hooks/useUserContext";
 import axios from "axios";
 import { useProfileContext } from "../../Hooks/useProfileContext";
 import EditModal from "./EditModal";
+import { jwtDecode } from "jwt-decode";
+import EditCommentModal from "./EditCommentModal";
 
 function displayDate(date: string) {
   const now = new Date();
@@ -34,6 +36,7 @@ interface PostData {
   image: string | undefined;
   showAllComments?: boolean;
   allComments?: Comment[];
+  userId: string;
 }
 
 interface ICommentEntry {
@@ -50,15 +53,21 @@ export default function PostDetails({
   showAllComments = false,
   postId,
   allComments,
+  userId,
 }: PostData) {
   const [isCommentsOpen, setIsCommentsOpen] = useState(showAllComments);
   const [comments, setComments] = useState<Comment[]>(allComments || []);
   const [isSubmit, setisSubmit] = useState<boolean>(false);
   const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [openThreeDots, setOpenThreeDots] = useState<boolean>(false);
+  const [openEditComment, setOpenEditComment] = useState<boolean>(false);
+  const [openCommentTools, setOpenCommentTools] = useState<boolean>(false);
   const { token } = useUserContext();
+  const safeToken = token || "";
+  const { user }: { user: string } = jwtDecode(safeToken);
   const { deletePost } = useProfileContext();
   const threeDotsRef: any = useRef(null);
+  const commentsToolsRef: any = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -75,6 +84,23 @@ export default function PostDetails({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openThreeDots]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!openCommentTools) return;
+      if (
+        commentsToolsRef.current &&
+        !commentsToolsRef.current.contains(e.target as Node)
+      ) {
+        setOpenCommentTools(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openCommentTools]);
+
   useEffect(() => {
     if (allComments) {
       setComments(allComments);
@@ -131,12 +157,14 @@ export default function PostDetails({
             </p>
           </div>
         </div>
-        <span
-          onClick={() => setOpenThreeDots(true)}
-          className="me-2 text-blue-500 text-lg cursor-pointer"
-        >
-          <i className="fas fa-ellipsis-vertical "></i>
-        </span>
+        {userId === user && (
+          <span
+            onClick={() => setOpenThreeDots(true)}
+            className="me-2 text-blue-500 text-lg cursor-pointer"
+          >
+            <i className="fas fa-ellipsis-vertical "></i>
+          </span>
+        )}
         <div
           ref={threeDotsRef}
           className={`absolute ${
@@ -179,6 +207,7 @@ export default function PostDetails({
           />
         </div>
       )}
+
       <div className="reacts border-b border-slate-200 py-8 flex justify-around text-blue-500">
         <i className="fa-solid fa-thumbs-up   fa-xl cursor-pointer"></i>
         <i
@@ -247,8 +276,8 @@ export default function PostDetails({
               comments &&
               comments.length > 0 &&
               comments?.map((comment: Comment, index: number) => (
-                <div key={index}>
-                  <div className="info  px-5 flex items-center justify-between mt-4">
+                <div key={index} className="relative">
+                  <div className="px-5 flex items-center justify-between mt-4 ">
                     <div className="flex space-x-3">
                       <div className="img size-10 overflow-hidden bg-blue-200 flex justify-center items-center rounded-full">
                         {!comment.commentCreator.photo.includes("undefined") ? (
@@ -272,13 +301,47 @@ export default function PostDetails({
                         </p>
                       </div>
                     </div>
-                    <span className="me-2 text-blue-500 text-lg cursor-pointer">
-                      <i className="fas fa-ellipsis-vertical "></i>
-                    </span>
+                    {comment.commentCreator._id === user && (
+                      <span
+                        className="me-2 text-blue-500 text-lg cursor-pointer"
+                        onClick={() => setOpenCommentTools(true)}
+                      >
+                        <i className="fas fa-ellipsis-vertical "></i>
+                      </span>
+                    )}
                   </div>
                   <p className="ps-20 pb-4 border-b border-slate-200">
                     {comment.content}
                   </p>
+                  <div
+                    ref={commentsToolsRef}
+                    className={`absolute ${
+                      openCommentTools ? "block" : "hidden"
+                    } w-fit bg-white  overflow-hidden rounded-md shadow-lg right-12 top-1 z-10 border border-slate-200`}
+                  >
+                    <ul>
+                      <li
+                        onClick={() => {
+                          setOpenCommentTools(false);
+                          toast.error("This feature is not implemented yet.");
+                        }}
+                        className="text-red-500 text-sm font-bold cursor-pointer border-b border-slate-200 p-2 hover:bg-slate-300"
+                      >
+                        <i className="fas fa-trash-can"></i> Delete Comment
+                      </li>
+                      <li
+                        onClick={() => {
+                          setOpenCommentTools(false);
+                          setOpenEditComment(true);
+                          toast.error("This feature is not implemented yet.");
+                        }}
+                        className="text-blue-500 text-sm  font-bold cursor-pointer p-2 hover:bg-slate-300"
+                      >
+                        <i className="fa-solid fa-pen-to-square"></i> Update
+                        Comment
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               ))
             ) : comments[0] ? (
@@ -309,7 +372,10 @@ export default function PostDetails({
                       </p>
                     </div>
                   </div>
-                  <span className="me-2 text-blue-500 text-lg cursor-pointer">
+                  <span
+                    className="me-2 text-blue-500 text-lg cursor-pointer"
+                    onClick={() => setOpenCommentTools(true)}
+                  >
                     <i className="fas fa-ellipsis-vertical "></i>
                   </span>
                 </div>
@@ -321,6 +387,35 @@ export default function PostDetails({
                     View all comments <i className="fas fa-arrow-right"></i>
                   </p>
                 </Link>
+                <div
+                  ref={commentsToolsRef}
+                  className={`absolute ${
+                    openCommentTools ? "block" : "hidden"
+                  } w-fit bg-white  overflow-hidden rounded-md shadow-lg right-12 top-1 z-10 border border-slate-200`}
+                >
+                  <ul>
+                    <li
+                      onClick={() => {
+                        setOpenCommentTools(false);
+                        toast.error("This feature is not implemented yet.");
+                      }}
+                      className="text-red-500 text-sm font-bold cursor-pointer border-b border-slate-200 p-2 hover:bg-slate-300"
+                    >
+                      <i className="fas fa-trash-can"></i> Delete Comment
+                    </li>
+                    <li
+                      onClick={() => {
+                        setOpenCommentTools(false);
+                        setOpenEditComment(true);
+                        toast.error("This feature is not implemented yet.");
+                      }}
+                      className="text-blue-500 text-sm  font-bold cursor-pointer p-2 hover:bg-slate-300"
+                    >
+                      <i className="fa-solid fa-pen-to-square"></i> Update
+                      Comment
+                    </li>
+                  </ul>
+                </div>
               </>
             ) : (
               <>
@@ -331,8 +426,15 @@ export default function PostDetails({
         </>
       )}
       {openEditModal && (
-        <EditModal openEditModal={openEditModal} postId={postId} />
+        <EditModal
+          setOpenEditModal={setOpenEditModal}
+          openEditModal={openEditModal}
+          postId={postId}
+          image={image}
+          body={content}
+        />
       )}
+      {/* <EditCommentModal /> */}
     </div>
   );
 }

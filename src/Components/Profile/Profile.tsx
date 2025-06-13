@@ -12,7 +12,7 @@ export default function Profile() {
 
   return (
     <div className="bg-[#f1f1f1] min-h-screen">
-      <div className="container py-4">
+      <div className="container py-4 p-2">
         {profilePosts.length > 0 ? (
           profilePosts.map((post, index) => (
             <PostDetails
@@ -24,6 +24,7 @@ export default function Profile() {
               userName={post.user.name}
               postId={post._id}
               allComments={post.comments}
+              userId={post.user._id}
             />
           ))
         ) : (

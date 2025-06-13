@@ -1,6 +1,5 @@
 import { useFormik } from "formik";
-import postImgae from "../../assets/postImpty.jpg";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import toast from "react-hot-toast";
 import { useUserContext } from "../../Hooks/useUserContext";
@@ -14,15 +13,39 @@ interface AddPost {
 }
 
 interface EditModalProps {
+  setOpenEditModal: (value: boolean) => void;
   openEditModal: boolean;
   postId: string;
+  image: string | undefined;
+  body: string | undefined;
 }
 
-export default function EditModal({ openEditModal, postId }: EditModalProps) {
+export default function EditModal({
+  setOpenEditModal,
+  postId,
+  openEditModal,
+  image,
+  body,
+}: EditModalProps) {
   const initialValues: AddPost = {
-    body: "",
+    body: body || "",
     image: null,
   };
+
+  const modalRef: any = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!openEditModal) return;
+      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+        setOpenEditModal(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openEditModal]);
 
   const formik = useFormik({
     initialValues,
@@ -52,8 +75,8 @@ export default function EditModal({ openEditModal, postId }: EditModalProps) {
     }
 
     try {
-      const { data } = await axios.post(
-        `https://linked-posts.routemisr.com/posts`,
+      const { data } = await axios.put(
+        `https://linked-posts.routemisr.com/posts/${postId}`,
         request,
         {
           headers: {
@@ -66,6 +89,7 @@ export default function EditModal({ openEditModal, postId }: EditModalProps) {
       formik.resetForm({ values: { body: "", image: null } });
       getUserPosts(user);
       setChosenImage(null);
+      setOpenEditModal(false);
       if (imageInputRef.current) {
         imageInputRef.current.value = "";
       }
@@ -82,8 +106,17 @@ export default function EditModal({ openEditModal, postId }: EditModalProps) {
 
   return (
     <>
-      <div className="bg-[rgba(0,0,0,0.6)] min-h-screen pt-3 fixed top-0 right-0 left-0 bottom-0 flex items-center">
-        <div className="container mx-auto flex bg-[#f1f1f1] p-4 rounded-lg justify-around md:flex-row flex-col">
+      <div className="bg-[rgba(0,0,0,0.6)] min-h-screen pt-3 fixed top-0 right-0 left-0 p-2 bottom-0 flex items-center">
+        <div
+          ref={modalRef}
+          className="container mx-auto flex bg-[#f1f1f1] p-4 rounded-lg justify-around md:flex-row flex-col relative"
+        >
+          <span
+            className="absolute top-2 right-2 cursor-pointer"
+            onClick={() => setOpenEditModal(false)}
+          >
+            <i className="fas fa-xmark-square  fa-xl text-red-500"></i>
+          </span>
           <form onSubmit={formik.handleSubmit} className="md:w-2/5 mb-2">
             <h1 className="uppercase text-blue-500 text-center text-3xl mb-3 font-bold">
               Edit Post
@@ -172,7 +205,7 @@ export default function EditModal({ openEditModal, postId }: EditModalProps) {
                   type="submit"
                   className="text-white  cursor-pointer bg-blue-500 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300  font-medium rounded-lg text-sm  sm:w-auto px-5 py-2.5 text-center "
                 >
-                  Post
+                  Edit
                 </button>
               )}
             </div>
@@ -184,7 +217,7 @@ export default function EditModal({ openEditModal, postId }: EditModalProps) {
 
             <div className="post-image">
               <img
-                src={chosenImage ? chosenImage : postImgae}
+                src={chosenImage ? chosenImage : image}
                 className="w-full h-full object-cover object-top"
                 alt="chosen image"
               />

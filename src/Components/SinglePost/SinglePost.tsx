@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useUserContext } from "../../Hooks/useUserContext";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Loading from "../Loading/Loading";
 import PostDetails from "../PostDetails/PostDetails";
 import { useParams } from "react-router-dom";
@@ -36,6 +36,7 @@ export default function SinglePost() {
         <div className="bg-[#f1f1f1] pt-5">
           {data && (
             <PostDetails
+              userId={data.user._id}
               content={data.body}
               image={data.image}
               photo={data.user.photo}
