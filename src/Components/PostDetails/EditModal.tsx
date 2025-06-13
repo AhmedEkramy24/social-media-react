@@ -49,7 +49,7 @@ export default function EditModal({
 
   const formik = useFormik({
     initialValues,
-    onSubmit: addPost,
+    onSubmit: editPost,
   });
 
   const { token } = useUserContext();
@@ -58,7 +58,7 @@ export default function EditModal({
   const [apiError, setApiError] = useState<string>("");
   const { getUserPosts } = useProfileContext();
 
-  async function addPost(values: AddPost) {
+  async function editPost(values: AddPost) {
     setIsSubmit(true);
 
     if ((!values.body || values.body.trim() === "") && !values.image) {
@@ -184,6 +184,7 @@ export default function EditModal({
                   onClick={() => {
                     imageInputRef.current && (imageInputRef.current.value = "");
                     setChosenImage(null);
+                    formik.setFieldValue("image", null);
                   }}
                   className="px-3 py-1 rounded-md cursor-pointer text-red-500 hover:bg-red-500 hover:text-white border border-red-500 absolute right-2 bottom-1"
                 >

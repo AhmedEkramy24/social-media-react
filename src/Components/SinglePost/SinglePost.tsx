@@ -1,49 +1,51 @@
 import axios from "axios";
 import { useUserContext } from "../../Hooks/useUserContext";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import Loading from "../Loading/Loading";
 import PostDetails from "../PostDetails/PostDetails";
 import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import type { IPost } from "../../interfaces";
 
 export default function SinglePost() {
   const { id } = useParams();
   const { token } = useUserContext();
-  function getAllPosts() {
-    return axios.get(`https://linked-posts.routemisr.com/posts/${id}`, {
-      headers: {
-        token,
-      },
-    });
+  const [post, setPost] = useState<IPost | null>(null);
+  const [isLoading, setisLoading] = useState<boolean>(true);
+  async function getAllPosts() {
+    let { data } = await axios.get(
+      `https://linked-posts.routemisr.com/posts/${id}`,
+      {
+        headers: {
+          token,
+        },
+      }
+    );
+    setPost(data.post);
+    setisLoading(false);
   }
 
-  const { data, isError, isLoading } = useQuery({
-    queryKey: ["singlePost"],
-    queryFn: getAllPosts,
-    select: (data) => data.data.post,
-  });
+  useEffect(() => {
+    if (token) {
+      getAllPosts();
+    }
+  }, [token]);
 
   return (
     <>
-      {isError ? (
-        <div>
-          <h2 className="text-red-500 text-3xl text-center mt-20 font-bold">
-            Error, Try again later
-          </h2>
-        </div>
-      ) : isLoading ? (
+      {isLoading ? (
         <Loading />
       ) : (
-        <div className="bg-[#f1f1f1] pt-5">
-          {data && (
+        <div className="bg-[#f1f1f1] py-5 min-h-screen p-2">
+          {post && (
             <PostDetails
-              userId={data.user._id}
-              content={data.body}
-              image={data.image}
-              photo={data.user.photo}
-              time={data.createdAt}
-              userName={data.user.name}
-              postId={data._id}
-              allComments={data.comments}
+              userId={post.user._id}
+              content={post.body}
+              image={post.image}
+              photo={post.user.photo}
+              time={post.createdAt}
+              userName={post.user.name}
+              postId={post._id}
+              allComments={post.comments}
               showAllComments={true}
             />
           )}

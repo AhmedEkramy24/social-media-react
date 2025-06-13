@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { createContext, useEffect, useState, type ReactNode } from "react";
 import { useUserContext } from "../Hooks/useUserContext";
 import type { IPost } from "../interfaces";
+import toast from "react-hot-toast";
 
 interface ProfileContextType {
   profilePosts: IPost[] | null;
@@ -37,21 +38,26 @@ export default function ProfileContextProvider({
   }
 
   async function deletePost(postId: string) {
-    let { data } = await axios.delete(
-      `https://linked-posts.routemisr.com/posts/${postId}`,
-      {
-        headers: {
-          token,
-        },
-      }
-    );
-    const deletedPost = data.post;
-    setProfilePosts((prevPosts) => {
-      if (!prevPosts) return prevPosts;
-      let cpyPosts = structuredClone(prevPosts);
-      cpyPosts = cpyPosts.filter((post) => post._id !== deletedPost._id);
-      return cpyPosts;
-    });
+    try {
+      let { data } = await axios.delete(
+        `https://linked-posts.routemisr.com/posts/${postId}`,
+        {
+          headers: {
+            token,
+          },
+        }
+      );
+      const deletedPost = data.post;
+      setProfilePosts((prevPosts) => {
+        if (!prevPosts) return prevPosts;
+        let cpyPosts = structuredClone(prevPosts);
+        cpyPosts = cpyPosts.filter((post) => post._id !== deletedPost._id);
+        return cpyPosts;
+      });
+      toast.success(data.message);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   useEffect(() => {

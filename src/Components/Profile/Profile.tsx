@@ -2,13 +2,23 @@ import { Link } from "react-router-dom";
 import { useProfileContext } from "../../Hooks/useProfileContext";
 import Loading from "../Loading/Loading";
 import PostDetails from "../PostDetails/PostDetails";
+import { useEffect } from "react";
+import { useUserContext } from "../../Hooks/useUserContext";
+import { jwtDecode } from "jwt-decode";
 
 export default function Profile() {
-  const { profilePosts } = useProfileContext();
+  const { profilePosts, getUserPosts } = useProfileContext();
+  const { token } = useUserContext();
+  const safeToken = token || "";
+  const { user }: { user: string } = jwtDecode(safeToken);
 
   if (!profilePosts) {
     return <Loading />;
   }
+
+  useEffect(() => {
+    getUserPosts(user);
+  }, []);
 
   return (
     <div className="bg-[#f1f1f1] min-h-screen">
