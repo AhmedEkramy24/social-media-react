@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useProfileContext } from "../../Hooks/useProfileContext";
 import Loading from "../Loading/Loading";
 import PostDetails from "../PostDetails/PostDetails";
@@ -26,8 +27,13 @@ export default function Profile() {
             />
           ))
         ) : (
-          <div className="text-center py-10 text-blue-500 text-xl font-semibold">
-            No posts to display yet.
+          <div className="text-center py-10 text-blue-500 ">
+            <p className="font-bold text-2xl">No posts to display yet.</p>
+            <Link to={"/addpost"} className="block my-3">
+              <button className="py-1 px-3 rounded-md bg-blue-500 text-white hover:bg-blue-600">
+                Click to add post
+              </button>
+            </Link>
           </div>
         )}
       </div>

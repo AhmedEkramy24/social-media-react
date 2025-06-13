@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useUserContext } from "../../Hooks/useUserContext";
 import axios from "axios";
 import { useProfileContext } from "../../Hooks/useProfileContext";
+import EditModal from "./EditModal";
 
 function displayDate(date: string) {
   const now = new Date();
@@ -53,6 +54,7 @@ export default function PostDetails({
   const [isCommentsOpen, setIsCommentsOpen] = useState(showAllComments);
   const [comments, setComments] = useState<Comment[]>(allComments || []);
   const [isSubmit, setisSubmit] = useState<boolean>(false);
+  const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [openThreeDots, setOpenThreeDots] = useState<boolean>(false);
   const { token } = useUserContext();
   const { deletePost } = useProfileContext();
@@ -154,6 +156,7 @@ export default function PostDetails({
             <li
               onClick={() => {
                 setOpenThreeDots(false);
+                setOpenEditModal(true);
                 toast.error("This feature is not implemented yet.");
               }}
               className="text-blue-500 font-bold cursor-pointer p-2 hover:bg-slate-300"
@@ -326,6 +329,9 @@ export default function PostDetails({
             )}
           </div>
         </>
+      )}
+      {openEditModal && (
+        <EditModal openEditModal={openEditModal} postId={postId} />
       )}
     </div>
   );

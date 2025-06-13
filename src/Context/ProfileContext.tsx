@@ -5,7 +5,7 @@ import { useUserContext } from "../Hooks/useUserContext";
 import type { IPost } from "../interfaces";
 
 interface ProfileContextType {
-  profilePosts: IPost[];
+  profilePosts: IPost[] | null;
   deletePost: (postId: string) => void;
   getUserPosts: (postId: string) => void;
 }
@@ -21,7 +21,7 @@ interface ProfileContextProviderProps {
 export default function ProfileContextProvider({
   children,
 }: ProfileContextProviderProps) {
-  const [profilePosts, setProfilePosts] = useState<IPost[]>([]);
+  const [profilePosts, setProfilePosts] = useState<IPost[] | null>(null);
   const { token } = useUserContext();
 
   async function getUserPosts(userId: string) {
@@ -47,7 +47,8 @@ export default function ProfileContextProvider({
     );
     const deletedPost = data.post;
     setProfilePosts((prevPosts) => {
-      let cpyPosts = [...prevPosts];
+      if (!prevPosts) return prevPosts;
+      let cpyPosts = structuredClone(prevPosts);
       cpyPosts = cpyPosts.filter((post) => post._id !== deletedPost._id);
       return cpyPosts;
     });
